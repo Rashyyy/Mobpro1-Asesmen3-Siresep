@@ -19,10 +19,11 @@ import androidx.compose.ui.window.Dialog
 fun RecipeDialog(
     bitmap: Bitmap?,
     onDismissRequest: () -> Unit,
-    onConfirmation: (String, String) -> Unit
+    onConfirmation: (String, String, String) -> Unit
 ) {
     var judul by remember { mutableStateOf("") }
     var durasi by remember { mutableStateOf("") }
+    var tingkatKesulitan by remember { mutableStateOf("") }
 
     Dialog(onDismissRequest = { onDismissRequest() }) {
         Card(
@@ -75,7 +76,7 @@ fun RecipeDialog(
                         Text(text = "Batal")
                     }
                     OutlinedButton(
-                        onClick = { onConfirmation(judul, durasi) },
+                        onClick = { onConfirmation(judul, durasi, tingkatKesulitan) },
                         enabled = judul.isNotEmpty() && durasi.isNotEmpty(),
                         modifier = Modifier.padding(8.dp)
                     ) {

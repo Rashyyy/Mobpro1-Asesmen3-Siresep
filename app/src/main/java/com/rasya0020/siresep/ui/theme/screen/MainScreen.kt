@@ -134,8 +134,8 @@ fun MainScreen() {
         if (showResepDialog){
             RecipeDialog(
                 bitmap = bitmap,
-                onDismissRequest = { showResepDialog = false }) { judul, durasi ->
-                viewModel.simpanResep(user.email, judul, durasi, bitmap!!)
+                onDismissRequest = { showResepDialog = false }) { judul, durasi, tingkatKesulitan ->
+                viewModel.simpanResep(user.email, judul, durasi, tingkatKesulitan, bitmap!!)
                 showResepDialog = false
             }
         }
@@ -233,7 +233,7 @@ fun ItemResep(resep: Recipe, currentUserId: String, onDeleteClick: () -> Unit) {
     ) {
         AsyncImage(
             model = ImageRequest.Builder(LocalContext.current)
-                .data(resep.tautanGambar)
+                .data(resep.imageUri)
                 .crossfade(true)
                 .build(),
             contentDescription = stringResource(R.string.gambar, resep.judul),
@@ -242,21 +242,21 @@ fun ItemResep(resep: Recipe, currentUserId: String, onDeleteClick: () -> Unit) {
             error = painterResource(id = R.drawable.baseline_broken_image_24),
             modifier = Modifier.fillMaxWidth().padding(4.dp)
         )
-        if (resep.isMine == "1" && currentUserId.isNotEmpty()) {
-            IconButton(
-                onClick = { onDeleteClick() },
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(8.dp)
-                    .background(Color(0x88000000), shape = RoundedCornerShape(4.dp))
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.baseline_delete_24),
-                    contentDescription = stringResource(R.string.hapus_data),
-                    tint = Color.White
-                )
+            if (resep.isMine == "1" && currentUserId.isNotEmpty()) {
+                IconButton(
+                    onClick = { onDeleteClick() },
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(8.dp)
+                        .background(Color(0x88000000), shape = RoundedCornerShape(4.dp))
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.baseline_delete_24),
+                        contentDescription = stringResource(R.string.hapus_data),
+                        tint = Color.White
+                    )
+                }
             }
-        }
 
         Column(
             modifier = Modifier.fillMaxWidth().padding(4.dp)

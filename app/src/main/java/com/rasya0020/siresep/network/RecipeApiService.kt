@@ -10,7 +10,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import retrofit2.http.*
 
-private const val BASE_URL = "https://masak-apa.tomorisakura.vercel.app/"
+private const val BASE_URL = "https://siresep-production.up.railway.app/"
 
 private val moshi = Moshi.Builder()
     .add(KotlinJsonAdapterFactory())
@@ -22,34 +22,31 @@ private val retrofit = Retrofit.Builder()
     .build()
 
 interface RecipeApiService {
-    @GET("api/recipes")
+    @GET("index.php")
     suspend fun getRecipe(
-        @Header("Authorization") userId: String
+        @Header("Authorization") userEmail: String
     ): List<Recipe>
 
     @Multipart
-    @POST("api/recipes")
+    @POST("index.php")
     suspend fun postRecipe(
-        @Header("Authorization") userId: String,
+        @Header("Authorization") userEmail: String,
         @Part("judul") judul: RequestBody,
         @Part("durasi") durasi: RequestBody,
+        @Part("tingkat_kesulitan") tingkatKesulitan: RequestBody,
         @Part image: MultipartBody.Part
     ): OpStatus
 
-    @DELETE("api/recipes")
+    @DELETE("index.php")
     suspend fun deleteRecipe(
-        @Header("Authorization") userId: String,
+        @Header("Authorization") userEmail: String,
         @Query("id") id: String,
-        @Query("action") action: String
     ): OpStatus
 }
 
 object RecipeApi {
     val service: RecipeApiService by lazy {
         retrofit.create(RecipeApiService::class.java)
-    }
-    fun getRecipeUrl(imageId: String): String {
-        return "${BASE_URL}image.php?id=$imageId"
     }
 }
 

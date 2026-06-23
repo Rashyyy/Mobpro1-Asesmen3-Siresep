@@ -1,10 +1,12 @@
 package com.rasya0020.siresep.model
 
+import com.squareup.moshi.Json
+
 data class Recipe(
-    val id: String,
+    val id: Int,
     val judul: String,
-    val tautanGambar: String,
     val durasi: String,
     val tingkatKesulitan: String,
-    val isMine: String
+    val imageUri: String?,
+    val isMine: String = "1"
 )

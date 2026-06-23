@@ -11,6 +11,7 @@ import com.rasya0020.siresep.network.RecipeApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -39,13 +40,14 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    fun simpanResep(userId: String, judul: String, durasi: String, bitmap: Bitmap) {
+    fun simpanResep(userId: String, judul: String, durasi: String, tingkatKesulitan: String, bitmap: Bitmap) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val result = RecipeApi.service.postRecipe(
                     userId,
                     judul.toRequestBody("text/plain".toMediaTypeOrNull()),
                     durasi.toRequestBody("text/plain".toMediaTypeOrNull()),
+                    tingkatKesulitan.toRequestBody("text/plain".toMediaTypeOrNull()),
                     bitmap.toMultipartBody()
                 )
                 if (result.status == "success")
@@ -53,8 +55,9 @@ class MainViewModel : ViewModel() {
                 else
                     throw Exception(result.message)
             } catch (e: Exception) {
-                Log.d("MainViewModel", "Gagal menyimpan: ${e.message}")
-                pesanError.value = "Error: ${e.message}"
+                withContext(Dispatchers.Main) {
+                    pesanError.value = "Gagal menyimpan: ${e.message}"
+                }
             }
         }
     }
@@ -62,7 +65,7 @@ class MainViewModel : ViewModel() {
     fun hapusResep(userId: String,id: String) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val result = RecipeApi.service.deleteRecipe(userId ,id, "Delete")
+                val result = RecipeApi.service.deleteRecipe(userId ,id)
                 if (result.status == "success") {
                     ambilDaftarResep(userId)
                 } else {
@@ -70,7 +73,9 @@ class MainViewModel : ViewModel() {
                 }
             } catch (e: Exception) {
                 Log.d("MainViewModel", "Delete Failure: ${e.message}")
-                pesanError.value = "Error: ${e.message}"
+                withContext(Dispatchers.Main) {
+                    pesanError.value = "Error: ${e.message}"
+                }
             }
         }
     }
@@ -83,7 +88,7 @@ class MainViewModel : ViewModel() {
             "image/jpg".toMediaTypeOrNull(), 0, byteArray.size
         )
         return MultipartBody.Part.createFormData(
-            "gambar", "resep.jpg", requestBody)
+            "image", "resep.jpg", requestBody)
     }
 
     fun bersihkanPesan() {
