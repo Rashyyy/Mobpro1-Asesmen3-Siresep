@@ -42,7 +42,11 @@ class MainViewModel : ViewModel() {
     fun simpanResep(judul: String, durasi: String, bitmap: Bitmap) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                ambilDaftarResep()
+                val result = RecipeApi.service.postRecipe(
+                    judul.toRequestBody("text/plain".toMediaTypeOrNull()),
+                    durasi.toRequestBody("text/plain".toMediaTypeOrNull()),
+                    bitmap.toMultipartBody()
+                )
             } catch (e: Exception) {
                 Log.d("MainViewModel", "Gagal menyimpan: ${e.message}")
                 pesanError.value = "Error: ${e.message}"
@@ -50,7 +54,23 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    private fun Bitmap.keMultipartBody(): MultipartBody.Part {
+    fun hapusResep(id: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val result = RecipeApi.service.deleteRecipe(id)
+                if (result.status == "success") {
+                    ambilDaftarResep()
+                } else {
+                    throw Exception(result.message ?: "Gagal menghapus resep")
+                }
+            } catch (e: Exception) {
+                Log.d("MainViewModel", "Delete Failure: ${e.message}")
+                pesanError.value = "Error: ${e.message}"
+            }
+        }
+    }
+
+    private fun Bitmap.toMultipartBody(): MultipartBody.Part {
         val stream = ByteArrayOutputStream()
         compress(Bitmap.CompressFormat.JPEG, 80, stream)
         val byteArray = stream.toByteArray()
