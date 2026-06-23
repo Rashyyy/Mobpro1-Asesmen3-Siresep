@@ -31,6 +31,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.credentials.ClearCredentialStateRequest
@@ -147,8 +148,8 @@ fun MainScreen() {
         if (showResepDialog){
             RecipeDialog(
                 bitmap = bitmap,
-                onDismissRequest = { showResepDialog = false }) { judul, durasi, tingkatKesulitan ->
-                viewModel.simpanResep(user.email, judul, durasi, tingkatKesulitan, bitmap!!)
+                onDismissRequest = { showResepDialog = false }) { judul, durasi, tingkatKesulitan, deskripsi ->
+                viewModel.simpanResep(user.email, judul, durasi, tingkatKesulitan, deskripsi, bitmap!!)
                 showResepDialog = false
             }
         }
@@ -293,6 +294,13 @@ fun ItemResep(resep: Recipe, currentUserId: String, onDeleteClick: () -> Unit) {
                 text = "Tingkat: ${resep.tingkatKesulitan}",
                 fontSize = 12.sp,
                 color = Color.White
+            )
+            Text(
+                text = resep.deskripsi,
+                color = Color.White,
+                fontSize = 11.sp,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
             )
         }
     }

@@ -23,7 +23,7 @@ import androidx.compose.ui.window.Dialog
 fun RecipeDialog(
     bitmap: Bitmap?,
     onDismissRequest: () -> Unit,
-    onConfirmation: (String, String, String) -> Unit
+    onConfirmation: (String, String, String, String) -> Unit
 ) {
     var judul by remember { mutableStateOf("") }
     var durasi by remember { mutableStateOf("") }
@@ -31,6 +31,8 @@ fun RecipeDialog(
 
     var expanded by remember { mutableStateOf(false) }
     val options = listOf("Mudah", "Sedang", "Sulit")
+
+    var deskripsi by remember { mutableStateOf("") }
 
     Dialog(onDismissRequest = { onDismissRequest() }) {
         Card(
@@ -108,6 +110,14 @@ fun RecipeDialog(
                     }
                 }
 
+                OutlinedTextField(
+                    value = deskripsi,
+                    onValueChange = { deskripsi = it },
+                    label = { Text("Deskripsi/Cara Memasak") },
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                    minLines = 3
+                )
+
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
                     horizontalArrangement = Arrangement.Center
@@ -119,8 +129,8 @@ fun RecipeDialog(
                         Text(text = "Batal")
                     }
                     OutlinedButton(
-                        onClick = { onConfirmation(judul, durasi, tingkatKesulitan) },
-                        enabled = judul.isNotEmpty() && durasi.isNotEmpty(),
+                        onClick = { onConfirmation(judul, durasi, tingkatKesulitan, deskripsi) },
+                        enabled = judul.isNotEmpty() && durasi.isNotEmpty() && tingkatKesulitan.isNotEmpty() && deskripsi.isNotEmpty(),
                         modifier = Modifier.padding(8.dp)
                     ) {
                         Text(text = "Simpan")

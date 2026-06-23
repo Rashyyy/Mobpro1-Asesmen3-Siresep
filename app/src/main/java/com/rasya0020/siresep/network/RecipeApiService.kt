@@ -34,6 +34,7 @@ interface RecipeApiService {
         @Part("judul") judul: RequestBody,
         @Part("durasi") durasi: RequestBody,
         @Part("tingkat_kesulitan") tingkatKesulitan: RequestBody,
+        @Part("deskripsi") deskripsi: RequestBody,
         @Part image: MultipartBody.Part
     ): OpStatus
 

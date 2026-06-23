@@ -41,7 +41,7 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    fun simpanResep(userId: String, judul: String, durasi: String, tingkatKesulitan: String, bitmap: Bitmap) {
+    fun simpanResep(userId: String, judul: String, durasi: String, tingkatKesulitan: String, deskripsi: String, bitmap: Bitmap) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val result = RecipeApi.service.postRecipe(
@@ -49,6 +49,7 @@ class MainViewModel : ViewModel() {
                     judul.toRequestBody("text/plain".toMediaTypeOrNull()),
                     durasi.toRequestBody("text/plain".toMediaTypeOrNull()),
                     tingkatKesulitan.toRequestBody("text/plain".toMediaTypeOrNull()),
+                    deskripsi = deskripsi.toRequestBody("text/plain".toMediaTypeOrNull()),
                     bitmap.toMultipartBody()
                 )
                 if (result.status == "success")
