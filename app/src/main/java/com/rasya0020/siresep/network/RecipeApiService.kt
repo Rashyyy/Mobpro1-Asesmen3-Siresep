@@ -22,13 +22,13 @@ private val retrofit = Retrofit.Builder()
     .build()
 
 interface RecipeApiService {
-    @GET("index.php")
+    @GET("resep.php")
     suspend fun getRecipe(
         @Header("Authorization") userEmail: String
     ): List<Recipe>
 
     @Multipart
-    @POST("index.php")
+    @POST("resep.php")
     suspend fun postRecipe(
         @Header("Authorization") userEmail: String,
         @Part("judul") judul: RequestBody,
@@ -37,7 +37,7 @@ interface RecipeApiService {
         @Part image: MultipartBody.Part
     ): OpStatus
 
-    @DELETE("index.php")
+    @DELETE("resep.php")
     suspend fun deleteRecipe(
         @Header("Authorization") userEmail: String,
         @Query("id") id: String,
