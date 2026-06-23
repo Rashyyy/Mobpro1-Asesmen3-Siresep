@@ -289,6 +289,11 @@ fun ItemResep(resep: Recipe, currentUserId: String, onDeleteClick: () -> Unit) {
                 fontSize = 12.sp,
                 color = Color.White
             )
+            Text(
+                text = "Tingkat: ${resep.tingkatKesulitan}",
+                fontSize = 12.sp,
+                color = Color.White
+            )
         }
     }
 }
