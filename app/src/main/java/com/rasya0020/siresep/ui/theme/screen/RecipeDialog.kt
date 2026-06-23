@@ -1,5 +1,7 @@
 package com.rasya0020.siresep.ui.theme.screen
 
+import android.R.attr.enabled
+import android.R.attr.type
 import android.graphics.Bitmap
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
@@ -12,9 +14,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecipeDialog(
     bitmap: Bitmap?,
@@ -24,6 +28,9 @@ fun RecipeDialog(
     var judul by remember { mutableStateOf("") }
     var durasi by remember { mutableStateOf("") }
     var tingkatKesulitan by remember { mutableStateOf("") }
+
+    var expanded by remember { mutableStateOf(false) }
+    val options = listOf("Mudah", "Sedang", "Sulit")
 
     Dialog(onDismissRequest = { onDismissRequest() }) {
         Card(
@@ -56,14 +63,50 @@ fun RecipeDialog(
 
                 OutlinedTextField(
                     value = durasi,
-                    onValueChange = { durasi = it },
+                    onValueChange = {
+                        if (it.all { char -> char.isDigit() }) {
+                            durasi = it
+                        }
+                    },
                     label = { Text(text = "Durasi (Menit)") },
                     maxLines = 1,
                     keyboardOptions = KeyboardOptions(
-                        imeAction = ImeAction.Done
+                        keyboardType = KeyboardType.Number,
+                        imeAction = ImeAction.Next
                     ),
                     modifier = Modifier.padding(top = 8.dp)
                 )
+
+                ExposedDropdownMenuBox(
+                    expanded = expanded,
+                    onExpandedChange = { expanded = !expanded },
+                    modifier = Modifier.padding(top = 8.dp)
+                ) {
+                    OutlinedTextField(
+                        value = tingkatKesulitan,
+                        onValueChange = {},
+                        label = { Text("Tingkat Kesulitan") },
+                        readOnly = true,
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                        colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+                        modifier = Modifier.menuAnchor(type = MenuAnchorType.PrimaryNotEditable, enabled = true).fillMaxWidth()
+                    )
+
+                    ExposedDropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        options.forEach { option ->
+                            DropdownMenuItem(
+                                text = { Text(option) },
+                                onClick = {
+                                    tingkatKesulitan = option
+                                    expanded = false
+                                }
+                            )
+                        }
+                    }
+                }
 
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
