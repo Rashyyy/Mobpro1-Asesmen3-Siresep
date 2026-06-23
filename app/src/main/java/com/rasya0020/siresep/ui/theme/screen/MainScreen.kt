@@ -167,8 +167,10 @@ fun ScreenContent(viewModel: MainViewModel, userId: String,modifier: Modifier = 
     var showDeleteDialog by remember { mutableStateOf(false) }
     var selectedResepId by remember { mutableStateOf("") }
 
-    LaunchedEffect(Unit) {
-        viewModel.ambilDaftarResep(userId)
+    LaunchedEffect(userId) {
+        if (userId.isNotEmpty()) {
+            viewModel.ambilDaftarResep(userId)
+        }
     }
 
     if (showDeleteDialog) {

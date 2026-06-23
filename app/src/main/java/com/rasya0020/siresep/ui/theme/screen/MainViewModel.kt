@@ -31,7 +31,8 @@ class MainViewModel : ViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             statusApi.value = ApiStatus.LOADING
             try {
-                daftarResep.value = RecipeApi.service.getRecipe(userId)
+                val response = RecipeApi.service.getRecipe(userId)
+                daftarResep.value = response.reversed()
                 statusApi.value = ApiStatus.SUCCESS
             } catch (e: Exception) {
                 Log.d("MainViewModel", "Gagal memuat resep: ${e.message}")
