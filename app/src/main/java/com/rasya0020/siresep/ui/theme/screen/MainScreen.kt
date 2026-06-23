@@ -79,6 +79,8 @@ fun MainScreen() {
         bitmap = getCroppedImage(context.contentResolver, it)
         if (bitmap != null) showResepDialog = true
     }
+    var showEditDialog by remember { mutableStateOf(false) }
+    var resepYangDiedit by remember { mutableStateOf<Recipe?>(null) }
 
     Scaffold(
         topBar = {
@@ -136,7 +138,10 @@ fun MainScreen() {
         }
     )
     { innerPadding ->
-        ScreenContent(viewModel, user.email, Modifier.padding(innerPadding))
+        ScreenContent(viewModel, user.email, onEditClick = { resep ->
+            resepYangDiedit = resep
+            showEditDialog = true
+        },Modifier.padding(innerPadding))
         if (showDialog){
             ProfilDialog(
                 user = user,
@@ -153,6 +158,23 @@ fun MainScreen() {
                 showResepDialog = false
             }
         }
+        if (showEditDialog && resepYangDiedit != null) {
+            RecipeDialog(
+                initialData = resepYangDiedit,
+                onDismissRequest = { showEditDialog = false },
+                onConfirmation = { judul, durasi, tingkat, deskripsi ->
+                    viewModel.updateResep(
+                        id = resepYangDiedit!!.id.toString(),
+                        judul = judul,
+                        durasi = durasi,
+                        tingkatKesulitan = tingkat,
+                        deskripsi = deskripsi,
+                        email = user.email
+                    )
+                    showEditDialog = false
+                }
+            )
+        }
         if (pesanError != null){
             Toast.makeText(context, pesanError, Toast.LENGTH_LONG).show()
             viewModel.bersihkanPesan()
@@ -161,7 +183,7 @@ fun MainScreen() {
 }
 
 @Composable
-fun ScreenContent(viewModel: MainViewModel, userId: String,modifier: Modifier = Modifier) {
+fun ScreenContent(viewModel: MainViewModel, userId: String,onEditClick: (Recipe) -> Unit, modifier: Modifier = Modifier) {
     val daftarResep by viewModel.daftarResep
     val statusApi by viewModel.statusApi.collectAsState()
 
@@ -217,7 +239,8 @@ fun ScreenContent(viewModel: MainViewModel, userId: String,modifier: Modifier = 
                         onDeleteClick = {
                             selectedResepId = resep.id.toString()
                             showDeleteDialog = true
-                        }
+                        },
+                        onEditClick = { onEditClick(resep) }
                     )
                 }
             }
@@ -242,7 +265,7 @@ fun ScreenContent(viewModel: MainViewModel, userId: String,modifier: Modifier = 
 }
 
 @Composable
-fun ItemResep(resep: Recipe, currentUserId: String, onDeleteClick: () -> Unit) {
+fun ItemResep(resep: Recipe, currentUserId: String, onDeleteClick: () -> Unit, onEditClick: () -> Unit) {
     Box(
         modifier = Modifier.padding(4.dp).border(1.dp, Color.Gray),
         contentAlignment = Alignment.BottomCenter
@@ -259,18 +282,38 @@ fun ItemResep(resep: Recipe, currentUserId: String, onDeleteClick: () -> Unit) {
             modifier = Modifier.fillMaxWidth().padding(4.dp)
         )
             if (resep.isMine == "1" && currentUserId.isNotEmpty()) {
-                IconButton(
-                    onClick = { onDeleteClick() },
+                Row(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .padding(8.dp)
-                        .background(Color(0x88000000), shape = RoundedCornerShape(4.dp))
                 ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.baseline_delete_24),
-                        contentDescription = stringResource(R.string.hapus_data),
-                        tint = Color.White
-                    )
+                    IconButton(
+                        onClick = { onEditClick() },
+                        modifier = Modifier
+                            .background(Color(0x88000000), shape = RoundedCornerShape(4.dp))
+                            .size(40.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.baseline_edit_24),
+                            contentDescription = stringResource(R.string.edit_data),
+                            tint = Color.White
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    IconButton(
+                        onClick = { onDeleteClick() },
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .background(Color(0x88000000), shape = RoundedCornerShape(4.dp))
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.baseline_delete_24),
+                            contentDescription = stringResource(R.string.hapus_data),
+                            tint = Color.White
+                        )
+                    }
                 }
             }
 

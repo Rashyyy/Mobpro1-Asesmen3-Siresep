@@ -82,6 +82,30 @@ class MainViewModel : ViewModel() {
         }
     }
 
+    fun updateResep(id: String, judul: String, durasi: String, tingkatKesulitan: String, deskripsi: String, email: String, bitmap: Bitmap? = null) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val idBody = id.toRequestBody("text/plain".toMediaTypeOrNull())
+                val judulBody = judul.toRequestBody("text/plain".toMediaTypeOrNull())
+                val durasiBody = durasi.toRequestBody("text/plain".toMediaTypeOrNull())
+                val tingkatBody = tingkatKesulitan.toRequestBody("text/plain".toMediaTypeOrNull())
+                val descBody = deskripsi.toRequestBody("text/plain".toMediaTypeOrNull())
+
+                val result = RecipeApi.service.updateRecipe(
+                    email, idBody, judulBody, durasiBody, tingkatBody, descBody, bitmap?.toMultipartBody()
+                )
+
+                if (result.status == "success") {
+                    ambilDaftarResep(email)
+                } else {
+                    throw Exception(result.message)
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) { pesanError.value = "Gagal update: ${e.message}" }
+            }
+        }
+    }
+
     private fun Bitmap.toMultipartBody(): MultipartBody.Part {
         val stream = ByteArrayOutputStream()
         compress(Bitmap.CompressFormat.JPEG, 80, stream)

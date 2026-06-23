@@ -17,11 +17,13 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.rasya0020.siresep.model.Recipe
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecipeDialog(
-    bitmap: Bitmap?,
+    initialData: Recipe? = null,
+    bitmap: Bitmap? = null,
     onDismissRequest: () -> Unit,
     onConfirmation: (String, String, String, String) -> Unit
 ) {

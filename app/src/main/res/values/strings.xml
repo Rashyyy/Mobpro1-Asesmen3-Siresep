@@ -12,6 +12,7 @@
     <string name="batal">Batal</string>
     <string name="simpan">Simpan</string>
     <string name="hapus_data">Hapus Resep</string>
+    <string name="edit_data">Edit Resep</string>
     <string name="konfirmasi_hapus">Apakah Anda yakin ingin menghapus resep ini?</string>
     <string name="hapus">Hapus</string>
 </resources>

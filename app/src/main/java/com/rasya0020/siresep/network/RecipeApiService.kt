@@ -38,6 +38,18 @@ interface RecipeApiService {
         @Part image: MultipartBody.Part
     ): OpStatus
 
+    @Multipart
+    @POST("resep.php")
+    suspend fun updateRecipe(
+        @Header("Authorization") userEmail: String,
+        @Part("id") id: RequestBody,
+        @Part("judul") judul: RequestBody,
+        @Part("durasi") durasi: RequestBody,
+        @Part("tingkat_kesulitan") tingkatKesulitan: RequestBody,
+        @Part("deskripsi") deskripsi: RequestBody,
+        @Part image: MultipartBody.Part? = null
+    ): OpStatus
+
     @DELETE("resep.php")
     suspend fun deleteRecipe(
         @Header("Authorization") userEmail: String,
