@@ -26,11 +26,11 @@ class MainViewModel : ViewModel() {
     var pesanError = mutableStateOf<String?>(null)
         private set
 
-    fun ambilDaftarResep() {
+    fun ambilDaftarResep(userId: String) {
         viewModelScope.launch(Dispatchers.IO) {
             statusApi.value = ApiStatus.LOADING
             try {
-                daftarResep.value = RecipeApi.service.getRecipe()
+                daftarResep.value = RecipeApi.service.getRecipe(userId)
                 statusApi.value = ApiStatus.SUCCESS
             } catch (e: Exception) {
                 Log.d("MainViewModel", "Gagal memuat resep: ${e.message}")
@@ -39,14 +39,19 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    fun simpanResep(judul: String, durasi: String, bitmap: Bitmap) {
+    fun simpanResep(userId: String, judul: String, durasi: String, bitmap: Bitmap) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val result = RecipeApi.service.postRecipe(
+                    userId,
                     judul.toRequestBody("text/plain".toMediaTypeOrNull()),
                     durasi.toRequestBody("text/plain".toMediaTypeOrNull()),
                     bitmap.toMultipartBody()
                 )
+                if (result.status == "success")
+                    ambilDaftarResep(userId)
+                else
+                    throw Exception(result.message)
             } catch (e: Exception) {
                 Log.d("MainViewModel", "Gagal menyimpan: ${e.message}")
                 pesanError.value = "Error: ${e.message}"
@@ -54,14 +59,14 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    fun hapusResep(id: String) {
+    fun hapusResep(userId: String,id: String) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val result = RecipeApi.service.deleteRecipe(id)
+                val result = RecipeApi.service.deleteRecipe(userId ,id, "Delete")
                 if (result.status == "success") {
-                    ambilDaftarResep()
+                    ambilDaftarResep(userId)
                 } else {
-                    throw Exception(result.message ?: "Gagal menghapus resep")
+                    throw Exception(result.message)
                 }
             } catch (e: Exception) {
                 Log.d("MainViewModel", "Delete Failure: ${e.message}")
@@ -77,7 +82,8 @@ class MainViewModel : ViewModel() {
         val requestBody = byteArray.toRequestBody(
             "image/jpg".toMediaTypeOrNull(), 0, byteArray.size
         )
-        return MultipartBody.Part.createFormData("gambar", "resep.jpg", requestBody)
+        return MultipartBody.Part.createFormData(
+            "gambar", "resep.jpg", requestBody)
     }
 
     fun bersihkanPesan() {

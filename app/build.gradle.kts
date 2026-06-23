@@ -70,6 +70,7 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.android.image.cropper)
     implementation(libs.compose.material.icons.extended)
+    implementation(libs.androidx.compose.foundation)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

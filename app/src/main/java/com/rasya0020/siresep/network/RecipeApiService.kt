@@ -23,11 +23,14 @@ private val retrofit = Retrofit.Builder()
 
 interface RecipeApiService {
     @GET("api/recipes")
-    suspend fun getRecipe(): List<Recipe>
+    suspend fun getRecipe(
+        @Header("Authorization") userId: String
+    ): List<Recipe>
 
     @Multipart
     @POST("api/recipes")
     suspend fun postRecipe(
+        @Header("Authorization") userId: String,
         @Part("judul") judul: RequestBody,
         @Part("durasi") durasi: RequestBody,
         @Part image: MultipartBody.Part
@@ -35,13 +38,18 @@ interface RecipeApiService {
 
     @DELETE("api/recipes")
     suspend fun deleteRecipe(
-        @Query("id") id: String
+        @Header("Authorization") userId: String,
+        @Query("id") id: String,
+        @Query("action") action: String
     ): OpStatus
 }
 
 object RecipeApi {
     val service: RecipeApiService by lazy {
         retrofit.create(RecipeApiService::class.java)
+    }
+    fun getRecipeUrl(imageId: String): String {
+        return "${BASE_URL}image.php?id=$imageId"
     }
 }
 

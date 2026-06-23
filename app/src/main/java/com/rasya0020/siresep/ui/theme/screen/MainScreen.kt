@@ -4,16 +4,20 @@ package com.rasya0020.siresep.ui.theme.screen
 import android.content.ContentResolver
 import android.content.Context
 import android.graphics.Bitmap
+import androidx.compose.ui.graphics.Color
 import android.graphics.ImageDecoder
 import android.os.Build
 import android.provider.MediaStore
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
@@ -50,6 +54,9 @@ import com.rasya0020.siresep.model.Recipe
 import com.rasya0020.siresep.model.User
 import com.rasya0020.siresep.network.ApiStatus
 import com.rasya0020.siresep.network.UserDataStore
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -80,11 +87,16 @@ fun MainScreen() {
                 ),
                 actions = {
                     IconButton(onClick = {
-
+                        if (user.email.isEmpty()){
+                            CoroutineScope(Dispatchers.IO).launch { signIn(context, dataStore) }
+                        }
+                        else{
+                            showDialog = true
+                        }
                     }) {
                         Icon(
                             painter = painterResource(R.drawable.baseline_account_circle_24),
-                            contentDescription = "Profil",
+                            contentDescription = stringResource(R.string.profil),
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }
@@ -93,20 +105,37 @@ fun MainScreen() {
         },
         floatingActionButton = {
             FloatingActionButton(onClick = {
-                val options = CropImageContractOptions(null, CropImageOptions(
-                    imageSourceIncludeGallery = false, imageSourceIncludeCamera = true, fixAspectRatio = true
-                ))
+                val options = CropImageContractOptions(
+                    null, CropImageOptions(
+                        imageSourceIncludeGallery = false,
+                        imageSourceIncludeCamera = true,
+                        fixAspectRatio = true
+                    )
+                )
                 launcher.launch(options)
-            }){ Icon(Icons.Default.Add, contentDescription = "Tambah Resep") }
+            }){
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = stringResource(R.string.tambah_resep)
+                )
+            }
         }
-    ) { innerPadding ->
-        ScreenContent(viewModel, Modifier.padding(innerPadding))
-
+    )
+    { innerPadding ->
+        ScreenContent(viewModel, user.email, Modifier.padding(innerPadding))
+        if (showDialog){
+            ProfilDialog(
+                user = user,
+                onDismissRequest = { showDialog = false }) {
+                CoroutineScope(Dispatchers.IO).launch { signOut(context, dataStore) }
+                showDialog = false
+            }
+        }
         if (showResepDialog){
             RecipeDialog(
                 bitmap = bitmap,
                 onDismissRequest = { showResepDialog = false }) { judul, durasi ->
-                viewModel.simpanResep(judul, durasi, bitmap!!)
+                viewModel.simpanResep(user.email, judul, durasi, bitmap!!)
                 showResepDialog = false
             }
         }
@@ -118,48 +147,133 @@ fun MainScreen() {
 }
 
 @Composable
-fun ScreenContent(viewModel: MainViewModel, modifier: Modifier = Modifier) {
+fun ScreenContent(viewModel: MainViewModel, userId: String,modifier: Modifier = Modifier) {
     val daftarResep by viewModel.daftarResep
     val statusApi by viewModel.statusApi.collectAsState()
 
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var selectedResepId by remember { mutableStateOf("") }
+
     LaunchedEffect(Unit) {
-        viewModel.ambilDaftarResep()
+        viewModel.ambilDaftarResep(userId)
+    }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text(text = "Hapus Resep") },
+            text = { Text(text = "Apakah Anda yakin ingin menghapus resep ini?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.hapusResep(userId, selectedResepId)
+                    showDeleteDialog = false
+                }) {
+                    Text(text = "Hapus", color = Color.Red)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text(text = "Batal")
+                }
+            }
+        )
     }
 
     when (statusApi) {
-        ApiStatus.LOADING -> Box(Modifier.fillMaxSize(), Alignment.Center) { CircularProgressIndicator() }
+        ApiStatus.LOADING -> {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        }
         ApiStatus.SUCCESS -> {
             LazyVerticalGrid(
                 modifier = modifier.fillMaxSize().padding(4.dp),
-                columns = GridCells.Fixed(2)
+                columns = GridCells.Fixed(2),
+                contentPadding = PaddingValues(bottom = 80.dp)
             ) {
                 items(daftarResep) { resep ->
-                    ItemResep(resep = resep)
+                    ItemResep(
+                        resep = resep,
+                        currentUserId = userId,
+                        onDeleteClick = {
+                            selectedResepId = resep.id.toString()
+                            showDeleteDialog = true
+                        }
+                    )
                 }
             }
         }
-        ApiStatus.FAILED -> {  }
+        ApiStatus.FAILED -> {
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(text = stringResource(id = R.string.error))
+                Button(
+                    onClick = { viewModel.ambilDaftarResep(userId) },
+                    modifier = Modifier.padding(top = 16.dp),
+                    contentPadding = PaddingValues(horizontal = 32.dp, vertical = 16.dp)
+                ) {
+                    Text(text = stringResource(id = R.string.try_again))
+                }
+            }
+        }
     }
 }
 
 @Composable
-fun ItemResep(resep: Recipe) {
-    Card(modifier = Modifier.padding(4.dp)) {
-        Column {
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(resep.tautanGambar)
-                    .crossfade(true)
-                    .build(),
-                contentDescription = resep.judul,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxWidth().aspectRatio(1f)
-            )
-            Column(modifier = Modifier.padding(8.dp)) {
-                Text(text = resep.judul, fontWeight = FontWeight.Bold)
-                Text(text = "Durasi: ${resep.durasi}", fontSize = 12.sp)
-                Text(text = "Tingkat: ${resep.tingkatKesulitan}", fontSize = 12.sp)
+fun ItemResep(resep: Recipe, currentUserId: String, onDeleteClick: () -> Unit) {
+    Box(
+        modifier = Modifier.padding(4.dp).border(1.dp, Color.Gray),
+        contentAlignment = Alignment.BottomCenter
+    ) {
+        AsyncImage(
+            model = ImageRequest.Builder(LocalContext.current)
+                .data(resep.tautanGambar)
+                .crossfade(true)
+                .build(),
+            contentDescription = stringResource(R.string.gambar, resep.judul),
+            contentScale = ContentScale.Crop,
+            placeholder = painterResource(id = R.drawable.loading_img),
+            error = painterResource(id = R.drawable.baseline_broken_image_24),
+            modifier = Modifier.fillMaxWidth().padding(4.dp)
+        )
+        if (resep.isMine == "1" && currentUserId.isNotEmpty()) {
+            IconButton(
+                onClick = { onDeleteClick() },
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(8.dp)
+                    .background(Color(0x88000000), shape = RoundedCornerShape(4.dp))
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.baseline_delete_24),
+                    contentDescription = stringResource(R.string.hapus_data),
+                    tint = Color.White
+                )
             }
+        }
+
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(4.dp)
+                .background(Color(0x88000000))
+                .padding(4.dp)
+        ) {
+            Text(
+                text = resep.judul,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                fontSize = 16.sp
+            )
+            Text(
+                text = "${stringResource(R.string.durasi)}: ${resep.durasi}",
+                fontSize = 12.sp,
+                color = Color.White
+            )
         }
     }
 }
@@ -216,12 +330,20 @@ private suspend fun signOut(context: Context, dataStore: UserDataStore){
     }
 }
 
-private fun getCroppedImage(resolver: ContentResolver, result: CropImageView.CropResult): Bitmap? {
-    if (!result.isSuccessful) return null
+private fun getCroppedImage(
+    resolver: ContentResolver,
+    result: CropImageView.CropResult
+): Bitmap? {
+    if (!result.isSuccessful){
+        Log.e("IMAGE", "Error: ${result.error}")
+        return null
+    }
     val uri = result.uriContent ?: return null
+
     return if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
         MediaStore.Images.Media.getBitmap(resolver, uri)
     } else {
-        ImageDecoder.decodeBitmap(ImageDecoder.createSource(resolver, uri))
+        val source = ImageDecoder.createSource(resolver, uri)
+        ImageDecoder.decodeBitmap(source)
     }
 }

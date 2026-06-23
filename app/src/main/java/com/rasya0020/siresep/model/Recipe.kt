@@ -5,5 +5,6 @@ data class Recipe(
     val judul: String,
     val tautanGambar: String,
     val durasi: String,
-    val tingkatKesulitan: String
+    val tingkatKesulitan: String,
+    val isMine: String
 )
