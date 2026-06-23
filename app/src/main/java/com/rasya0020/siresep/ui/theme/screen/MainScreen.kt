@@ -12,7 +12,6 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -266,86 +265,100 @@ fun ScreenContent(viewModel: MainViewModel, userId: String,onEditClick: (Recipe)
 
 @Composable
 fun ItemResep(resep: Recipe, currentUserId: String, onDeleteClick: () -> Unit, onEditClick: () -> Unit) {
-    Box(
-        modifier = Modifier.padding(4.dp).border(1.dp, Color.Gray),
-        contentAlignment = Alignment.BottomCenter
+    Card(
+        modifier = Modifier
+            .padding(8.dp)
+            .fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
     ) {
-        AsyncImage(
-            model = ImageRequest.Builder(LocalContext.current)
-                .data(resep.imageUri)
-                .crossfade(true)
-                .build(),
-            contentDescription = stringResource(R.string.gambar, resep.judul),
-            contentScale = ContentScale.Crop,
-            placeholder = painterResource(id = R.drawable.loading_img),
-            error = painterResource(id = R.drawable.baseline_broken_image_24),
-            modifier = Modifier.fillMaxWidth().padding(4.dp)
-        )
-            if (resep.isMine == "1" && currentUserId.isNotEmpty()) {
-                Row(
+        Column {
+            Box {
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(resep.imageUri)
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = resep.judul,
+                    contentScale = ContentScale.Crop,
                     modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(8.dp)
-                ) {
-                    IconButton(
-                        onClick = { onEditClick() },
+                        .fillMaxWidth()
+                        .height(160.dp)
+                )
+                if (resep.isMine == "1" && currentUserId.isNotEmpty()) {
+                    Row(
                         modifier = Modifier
-                            .background(Color(0x88000000), shape = RoundedCornerShape(4.dp))
-                            .size(40.dp)
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.baseline_edit_24),
-                            contentDescription = stringResource(R.string.edit_data),
-                            tint = Color.White
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    IconButton(
-                        onClick = { onDeleteClick() },
-                        modifier = Modifier
+                            .align(Alignment.TopEnd)
                             .padding(8.dp)
-                            .background(Color(0x88000000), shape = RoundedCornerShape(4.dp))
                     ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.baseline_delete_24),
-                            contentDescription = stringResource(R.string.hapus_data),
-                            tint = Color.White
-                        )
+                        ActionIconButton(R.drawable.baseline_edit_24, "Edit") { onEditClick() }
+                        Spacer(modifier = Modifier.width(22.dp))
+                        ActionIconButton(R.drawable.baseline_delete_24, "Hapus") { onDeleteClick() }
                     }
                 }
             }
+            Column(modifier = Modifier.padding(12.dp)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = resep.judul,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f)
+                    )
 
-        Column(
-            modifier = Modifier.fillMaxWidth().padding(4.dp)
-                .background(Color(0x88000000))
-                .padding(4.dp)
-        ) {
-            Text(
-                text = resep.judul,
-                fontWeight = FontWeight.Bold,
-                color = Color.White,
-                fontSize = 16.sp
-            )
-            Text(
-                text = "${stringResource(R.string.durasi)}: ${resep.durasi}",
-                fontSize = 12.sp,
-                color = Color.White
-            )
-            Text(
-                text = "Tingkat: ${resep.tingkatKesulitan}",
-                fontSize = 12.sp,
-                color = Color.White
-            )
-            Text(
-                text = resep.deskripsi,
-                color = Color.White,
-                fontSize = 11.sp,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Surface(
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        shape = RoundedCornerShape(4.dp)
+                    ) {
+                        Text(
+                            text = resep.tingkatKesulitan,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                }
+                Text(
+                    text = "Durasi: ${resep.durasi} menit",
+                    fontSize = 11.sp,
+                    color = MaterialTheme.colorScheme.primary
+                )
+
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = resep.deskripsi,
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    lineHeight = 16.sp
+                )
+            }
         }
+    }
+    }
+
+@Composable
+fun ActionIconButton(icon: Int, desc: String, onClick: () -> Unit) {
+    IconButton(
+        onClick = onClick,
+        modifier = Modifier
+            .size(28.dp)
+            .background(Color.Black.copy(alpha = 0.5f), shape = RoundedCornerShape(8.dp))
+    ) {
+        Icon(
+            painter = painterResource(icon),
+            contentDescription = desc,
+            tint = Color.White,
+            modifier = Modifier.size(20.dp)
+        )
     }
 }
 
