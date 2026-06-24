@@ -60,6 +60,13 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
+private val OrangeWarm = Color(0xFFFF6B35)
+private val AmberGold = Color(0xFFFFA726)
+private val BrownDeep = Color(0xFF4E2B10)
+private val CreamBg = Color(0xFFFFF8F2)
+private val GreenFresh = Color(0xFF4CAF50)
+private val RedHot = Color(0xFFE53935)
+private val YellowMed = Color(0xFFFFC107)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen() {
@@ -82,19 +89,40 @@ fun MainScreen() {
     var resepYangDiedit by remember { mutableStateOf<Recipe?>(null) }
 
     Scaffold(
+        containerColor = CreamBg,
         topBar = {
-            TopAppBar(
-                title = { Text(text = stringResource(id = R.string.app_name)) },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.primary,
-                ),
-                actions = {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(OrangeWarm)
+                    .statusBarsPadding()
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(64.dp)
+                        .padding(horizontal = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column {
+                        Text(
+                            text = "🍳 " + stringResource(id = R.string.app_name),
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 20.sp,
+                            color = Color.White,
+                            letterSpacing = 0.5.sp
+                        )
+                        Text(
+                            text = if (user.email.isNotEmpty()) "Halo, ${user.email.substringBefore("@")}!" else "Temukan resep lezat",
+                            fontSize = 11.sp,
+                            color = Color.White.copy(alpha = 0.85f)
+                        )
+                    }
                     IconButton(onClick = {
                         if (user.email.isEmpty()){
                             CoroutineScope(Dispatchers.IO).launch { signIn(context, dataStore) }
-                        }
-                        else{
+                        } else {
                             showDialog = true
                         }
                     }) {
@@ -104,34 +132,55 @@ fun MainScreen() {
                                 contentDescription = "Profil",
                                 contentScale = ContentScale.Crop,
                                 modifier = Modifier
-                                    .size(32.dp)
+                                    .size(38.dp)
                                     .clip(CircleShape)
+                                    .background(Color.White.copy(alpha = 0.3f), CircleShape)
                             )
                         } else {
-                            Icon(
-                                painter = painterResource(R.drawable.baseline_account_circle_24),
-                                contentDescription = stringResource(R.string.profil),
-                                tint = MaterialTheme.colorScheme.primary
-                            )
+                            Box(
+                                modifier = Modifier
+                                    .size(38.dp)
+                                    .background(Color.White.copy(alpha = 0.25f), CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    painter = painterResource(R.drawable.baseline_account_circle_24),
+                                    contentDescription = stringResource(R.string.profil),
+                                    tint = Color.White,
+                                    modifier = Modifier.size(26.dp)
+                                )
+                            }
                         }
                     }
                 }
-            )
+            }
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = {
-                val options = CropImageContractOptions(
-                    null, CropImageOptions(
-                        imageSourceIncludeGallery = false,
-                        imageSourceIncludeCamera = true,
-                        fixAspectRatio = true
+            ExtendedFloatingActionButton(
+                onClick = {
+                    val options = CropImageContractOptions(
+                        null, CropImageOptions(
+                            imageSourceIncludeGallery = false,
+                            imageSourceIncludeCamera = true,
+                            fixAspectRatio = true
+                        )
                     )
-                )
-                launcher.launch(options)
-            }){
+                    launcher.launch(options)
+                },
+                containerColor = OrangeWarm,
+                contentColor = Color.White,
+                shape = RoundedCornerShape(16.dp)
+            ) {
                 Icon(
                     imageVector = Icons.Default.Add,
-                    contentDescription = stringResource(R.string.tambah_resep)
+                    contentDescription = stringResource(R.string.tambah_resep),
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = stringResource(R.string.tambah_resep),
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 14.sp
                 )
             }
         }
@@ -198,18 +247,32 @@ fun ScreenContent(viewModel: MainViewModel, userId: String,onEditClick: (Recipe)
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text(text = "Hapus Resep") },
-            text = { Text(text = "Apakah Anda yakin ingin menghapus resep ini?") },
+            shape = RoundedCornerShape(20.dp),
+            title = {
+                Text(
+                    text = "🗑️ Hapus Resep",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp
+                )
+            },
+            text = { Text(text = "Apakah Anda yakin ingin menghapus resep ini? Tindakan ini tidak dapat dibatalkan.") },
             confirmButton = {
-                TextButton(onClick = {
-                    viewModel.hapusResep(userId, selectedResepId)
-                    showDeleteDialog = false
-                }) {
-                    Text(text = "Hapus", color = Color.Red)
+                Button(
+                    onClick = {
+                        viewModel.hapusResep(userId, selectedResepId)
+                        showDeleteDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = RedHot),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Text(text = "Hapus", fontWeight = FontWeight.SemiBold)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) {
+                OutlinedButton(
+                    onClick = { showDeleteDialog = false },
+                    shape = RoundedCornerShape(10.dp)
+                ) {
                     Text(text = "Batal")
                 }
             }
@@ -222,25 +285,65 @@ fun ScreenContent(viewModel: MainViewModel, userId: String,onEditClick: (Recipe)
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator()
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    CircularProgressIndicator(
+                        color = OrangeWarm,
+                        strokeWidth = 3.dp,
+                        modifier = Modifier.size(48.dp)
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "Memuat resep...",
+                        fontSize = 14.sp,
+                        color = Color(0xFF888888)
+                    )
+                }
             }
         }
         ApiStatus.SUCCESS -> {
-            LazyVerticalGrid(
-                modifier = modifier.fillMaxSize().padding(4.dp),
-                columns = GridCells.Fixed(2),
-                contentPadding = PaddingValues(bottom = 80.dp)
-            ) {
-                items(daftarResep) { resep ->
-                    ItemResep(
-                        resep = resep,
-                        currentUserId = userId,
-                        onDeleteClick = {
-                            selectedResepId = resep.id.toString()
-                            showDeleteDialog = true
-                        },
-                        onEditClick = { onEditClick(resep) }
-                    )
+            if (daftarResep.isEmpty()) {
+                Box(
+                    modifier = modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(text = "🍽️", fontSize = 64.sp)
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = "Belum ada resep",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 20.sp,
+                            color = BrownDeep
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = "Tap tombol + untuk menambahkan resep pertamamu!",
+                            fontSize = 13.sp,
+                            color = Color(0xFF999999),
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                            modifier = Modifier.padding(horizontal = 32.dp)
+                        )
+                    }
+                }
+            } else {
+                LazyVerticalGrid(
+                    modifier = modifier.fillMaxSize().padding(horizontal = 8.dp, vertical = 4.dp),
+                    columns = GridCells.Fixed(2),
+                    contentPadding = PaddingValues(bottom = 96.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(daftarResep) { resep ->
+                        ItemResep(
+                            resep = resep,
+                            currentUserId = userId,
+                            onDeleteClick = {
+                                selectedResepId = resep.id.toString()
+                                showDeleteDialog = true
+                            },
+                            onEditClick = { onEditClick(resep) }
+                        )
+                    }
                 }
             }
         }
@@ -250,13 +353,25 @@ fun ScreenContent(viewModel: MainViewModel, userId: String,onEditClick: (Recipe)
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(text = stringResource(id = R.string.error))
+                Text(text = "😕", fontSize = 56.sp)
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = stringResource(id = R.string.error),
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 16.sp,
+                    color = BrownDeep
+                )
+                Spacer(modifier = Modifier.height(16.dp))
                 Button(
                     onClick = { viewModel.ambilDaftarResep(userId) },
-                    modifier = Modifier.padding(top = 16.dp),
-                    contentPadding = PaddingValues(horizontal = 32.dp, vertical = 16.dp)
+                    colors = ButtonDefaults.buttonColors(containerColor = OrangeWarm),
+                    shape = RoundedCornerShape(12.dp),
+                    contentPadding = PaddingValues(horizontal = 32.dp, vertical = 14.dp)
                 ) {
-                    Text(text = stringResource(id = R.string.try_again))
+                    Text(
+                        text = stringResource(id = R.string.try_again),
+                        fontWeight = FontWeight.SemiBold
+                    )
                 }
             }
         }
@@ -265,12 +380,18 @@ fun ScreenContent(viewModel: MainViewModel, userId: String,onEditClick: (Recipe)
 
 @Composable
 fun ItemResep(resep: Recipe, currentUserId: String, onDeleteClick: () -> Unit, onEditClick: () -> Unit) {
+    val difficultyColor = when (resep.tingkatKesulitan.lowercase()) {
+        "mudah", "easy" -> GreenFresh
+        "sedang", "medium" -> YellowMed
+        "sulit", "hard", "susah" -> RedHot
+        else -> OrangeWarm
+    }
     Card(
         modifier = Modifier
-            .padding(8.dp)
             .fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+        shape = RoundedCornerShape(18.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Column {
             Box {
@@ -284,80 +405,95 @@ fun ItemResep(resep: Recipe, currentUserId: String, onDeleteClick: () -> Unit, o
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(160.dp)
+                        .clip(RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp))
                 )
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(60.dp)
+                        .align(Alignment.BottomCenter)
+                        .background(
+                            brush = androidx.compose.ui.graphics.Brush.verticalGradient(
+                                colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.5f))
+                            )
+                        )
+                )
+                Surface(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(8.dp),
+                    color = difficultyColor,
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(
+                        text = resep.tingkatKesulitan,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        letterSpacing = 0.3.sp
+                    )
+                }
                 if (resep.isMine == "1" && currentUserId.isNotEmpty()) {
                     Row(
                         modifier = Modifier
                             .align(Alignment.TopEnd)
-                            .padding(8.dp)
+                            .padding(14.dp),
                     ) {
                         ActionIconButton(R.drawable.baseline_edit_24, "Edit") { onEditClick() }
-                        Spacer(modifier = Modifier.width(22.dp))
+                        Spacer(modifier = Modifier.width(24.dp))
                         ActionIconButton(R.drawable.baseline_delete_24, "Hapus") { onDeleteClick() }
                     }
                 }
             }
-            Column(modifier = Modifier.padding(12.dp)) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = resep.judul,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f)
-                    )
-
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Surface(
-                        color = MaterialTheme.colorScheme.primaryContainer,
-                        shape = RoundedCornerShape(4.dp)
-                    ) {
-                        Text(
-                            text = resep.tingkatKesulitan,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    }
-                }
+            Column(modifier = Modifier.padding(10.dp)) {
                 Text(
-                    text = "Durasi: ${resep.durasi} menit",
-                    fontSize = 11.sp,
-                    color = MaterialTheme.colorScheme.primary
+                    text = resep.judul,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 13.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    color = BrownDeep
                 )
-
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(text = "⏱", fontSize = 11.sp)
+                    Spacer(modifier = Modifier.width(3.dp))
+                    Text(
+                        text = "${resep.durasi} menit",
+                        fontSize = 11.sp,
+                        color = OrangeWarm,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+                Spacer(modifier = Modifier.height(5.dp))
                 Text(
                     text = resep.deskripsi,
-                    fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontSize = 11.sp,
+                    color = Color(0xFF888888),
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
-                    lineHeight = 16.sp
+                    lineHeight = 15.sp
                 )
             }
         }
     }
-    }
+}
+
 
 @Composable
 fun ActionIconButton(icon: Int, desc: String, onClick: () -> Unit) {
     IconButton(
         onClick = onClick,
         modifier = Modifier
-            .size(28.dp)
-            .background(Color.Black.copy(alpha = 0.5f), shape = RoundedCornerShape(8.dp))
+            .size(24.dp)
+            .background(Color.Black.copy(alpha = 0.55f), shape = CircleShape)
     ) {
         Icon(
             painter = painterResource(icon),
             contentDescription = desc,
             tint = Color.White,
-            modifier = Modifier.size(20.dp)
+            modifier = Modifier.size(15.dp)
         )
     }
 }
