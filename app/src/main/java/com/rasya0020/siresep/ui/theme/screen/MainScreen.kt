@@ -402,6 +402,8 @@ fun ItemResep(resep: Recipe, currentUserId: String, onDeleteClick: () -> Unit, o
                         .build(),
                     contentDescription = resep.judul,
                     contentScale = ContentScale.Crop,
+                    placeholder = painterResource(R.drawable.loading_img),
+                    error = painterResource(R.drawable.baseline_broken_image_24),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(160.dp)
